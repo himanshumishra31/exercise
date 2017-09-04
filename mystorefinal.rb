@@ -1,72 +1,61 @@
-require 'forwardable'
 module MyObjectStore
   def self.included(klass)
     class << klass
-      extend Forwardable
-      attr_accessor :array_object
-      def_delegator :@array_object, :collect
-      def_delegator :@array_object, :count
-      def attr_accesor(*args)
-        args.each do |name|
-          class_eval %{
-            def #{name}
-              @#{name}
-            end
+      attr_accessor :array_object, :find_by, :validate
+      def count
+        array_object.length
+      end
 
-            def #{name}=(val)
-              @#{name} = val
-            end
-          }
-
-          instance_eval %{
-            def find_by_#{name}(value)
-              array_object.find { |x| x.#{name}.eql? value }
-            end
-          }
-        end
+      def collect
+        array_object
       end
 
       def validate_presence_of(*args)
-        class_eval %{
-          def is_exist?
-            #{args}.all? do |x|
-                raise "validate_presence_of condition not satisfied" unless eval(x.to_s)
-                true
-            end
+        args.each do |name|
+          define_method("is_exist_#{name}") do
+            return true if eval(name.to_s)
+            false
           end
-          }
+        end
       end
+    end
+    klass.find_by.each do |name|
+      klass.instance_eval %{
+        def find_by_#{name}(value)
+          array_object.find { |x| x.#{name}.eql? value }
+        end
+        }
     end
   end
 
   def save
-    if is_age_num?
-      if defined? validate
-        self.class.array_object << self if validate && is_exist?
-      else
-        self.class.array_object << self if is_exist?
-      end
-    else
-      raise "age not a integer in #{self}"
-    end
+    validate
+    self.class.array_object << self if @errors.empty?
+    return "created object #{self}" if @errors.empty?
+    @errors
   end
 
-  def is_age_num?
-    age.is_a?(Integer)
-  end
 end
 
 class Play
+  @find_by = [:fname, :lname, :age, :email]
+  @validate = [:fname, :age]
   @array_object = []
   include MyObjectStore
   include Enumerable
-  attr_accesor :fname ,:lname ,:age ,:email
-  validate_presence_of :fname ,:email
+  attr_accessor :fname ,:lname ,:age ,:email
+  validate_presence_of :fname ,:age
+
+
+  def initialize
+    @errors = Hash.new(Array.new)
+  end
 
   def validate
-    raise "Validate condition not satisfied #{self}" unless fname.length > 2
-    true
-
+    @errors[:age] += ['Age should be a integer'] unless age.is_a?(Integer)
+    self.class.validate.each do |param|
+      @errors[param] += ["#{param} must exist"] unless eval("is_exist_#{param}")
+    end
   end
 end
 
@@ -78,28 +67,21 @@ p2.age = 1
 
 p3 = Play.new
 p3.fname = "bsd"
-p3.age = 2
+p3.age = 12
 
 p4 = Play.new
 p4.fname ="bc"
 
 p5 = Play.new
 p5.age ="bc"
-p5.fname = "pp"
 
-begin
-  p2.save
-  p3.save
-  p4.save
-  p5.save
+puts p2.save
+puts p3.save
+puts p4.save
+puts p5.save
 
-  p Play.collect
-  p Play.count
-  p Play.find_by_fname('bcd')
-  p Play.find_by_lname('def')
+p Play.collect
+p Play.count
 
-rescue StandardError => e
-  puts e.message
-  p Play.collect
-  p Play.count
-end
+p Play.find_by_fname('abc')
+p Play.find_by_lname('def')
