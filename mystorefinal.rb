@@ -11,6 +11,7 @@ module MyObjectStore
       end
 
       def validate_presence_of(*args)
+        @validate = args
         args.each do |name|
           define_method("is_exist_#{name}") do
             return true if eval(name.to_s)
@@ -39,13 +40,10 @@ end
 
 class Play
   @find_by = [:fname, :lname, :age, :email]
-  @validate = [:fname, :age]
   @array_object = []
   include MyObjectStore
-  include Enumerable
   attr_accessor :fname ,:lname ,:age ,:email
   validate_presence_of :fname ,:age
-
 
   def initialize
     @errors = Hash.new(Array.new)
