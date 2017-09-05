@@ -22,8 +22,9 @@ module MyObjectStore
 
       def validate_numericality_of(*args)
         args.each do |name|
-          validators << "check_numericalilty_of_#{ name }"
-          define_method("check_numericalilty_of_#{ name }") do
+          method_name = "check_numericalilty_of_#{ name }"
+          validators << method_name
+          define_method(method_name) do
             if public_send(name)
               errors[name] << 'must be an integer' unless public_send(name).is_a?(Integer)
             end
