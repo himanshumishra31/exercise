@@ -1,35 +1,14 @@
 class Dynamic < String
-	def initialize(name)
-		super
-	end
-
 	def exclude?(other)
 		!include?(other)
 	end
 
-	def concat
-  	puts 'Enter optional arguments'
-    args = gets.chomp
-    param = args.split(&:to_s)
-		super(param.join(' '))
+	def camelcase
+    split.map(&:capitalize).join('')
 	end
 
-  def char_at
-    puts 'Enter position(required)'
-    pos = gets.chomp
-    puts 'Enter replace char'
-    chr = gets.chomp
-    self[pos.to_i] = chr
-    self
-  end
-
-  def prepend
-    puts 'Enter required string'
-    req_arg = gets.chomp
-    puts 'Enter optional strings'
-    opt_arg = gets
-    param = opt_arg.split(&:to_s)
-    super(req_arg,param.join(' '))
+  def reverse_sentence
+    split(' ').reverse.join(' ')
   end
 end
 

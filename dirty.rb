@@ -13,7 +13,11 @@ module Dirty
         args.each do |param|
           class_eval %{
             def #{param}=(val)
-              changed
+              @#{param}=val
+            end
+
+            def #{param}
+              @#{param}
             end
           }
         end
@@ -39,13 +43,14 @@ end
 class User
   include Dirty
   attr_accessor :name, :age, :email
-  define_dirty_attributes :name, :age
+  define_dirty_attributes :name ,:age
 end
 
 u = User.new
 u.name = 'Akhil'
 u.email = 'akhil@vinsol.com'
 u.age = 30
+puts u.age
 puts 1
 puts u.changed?
 puts 2

@@ -4,10 +4,14 @@ module MyObjectStore
     class << klass
       extend Forwardable
       attr_accessor :array_object
+      # try to create a method of count and collect instead of using delegator
       def_delegator :@array_object, :collect
       def_delegator :@array_object, :count
       def attr_accesor(*args)
-        args.each do |name|
+        args.each do |name| # no use of instance or class eval
+          # study differnce between class instance variable and class variable
+          # study current scope and self
+
           class_eval %{
             def #{name}
               @#{name}
@@ -25,7 +29,7 @@ module MyObjectStore
           }
         end
       end
-
+      # use define_method instead of evals
       def validate_presence_of(*args)
         class_eval %{
           def is_exist?
@@ -37,6 +41,7 @@ module MyObjectStore
   end
 
   def save
+    # call validate method and store all the errrors in error
     raise "Age not an integer" unless is_age_num? if defined? age
     if defined? validate
       self.class.array_object << self if validate && is_exist?
@@ -46,18 +51,23 @@ module MyObjectStore
   end
 
   def is_age_num?
+    # don't create this function , instead create an validate_numerical method just like validate_presence_of
     age.is_a?(Integer)
   end
 end
 
 class Play
+  # create top level variable for find by method
   @array_object = []
   include MyObjectStore
-  include Enumerable
+  # create an instance variable of errors which store errors if there are
+  # include Enumerable
+  # create a top level constant for find by method and make normal attr_accessor methods
   attr_accesor :fname ,:lname ,:age ,:email
   validate_presence_of :fname, :email
 
   def validate
+    # store error in errors variable
     fname.length > 2
   end
 end
@@ -67,21 +77,22 @@ p2.fname = "abc"
 p2.lname = "def"
 p2.email = "heloo@gmail.com"
 p2.age = 1
-begin
 p2.save
+begin
+# p2.save
 
-p3 = Play.new
-p3.fname = "bcd"
-p3.save
+# p3 = Play.new
+# p3.fname = "bcd"
+# p3.save
 
-p4 = Play.new
-p4.fname ="bc"
-p4.save
+# p4 = Play.new
+# p4.fname ="bc"
+# p4.save
 
-p4 = Play.new
-p4.age ="bc"
-p4.fname = "pp"
-p4.save
+# p4 = Play.new
+# # p4.age ="bc"
+# p4.fname = "pp"
+# p4.save
 
 p Play.collect
 p Play.count

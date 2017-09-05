@@ -1,85 +1,96 @@
 module MyObjectStore
   def self.included(klass)
     class << klass
-      attr_accessor :array_object, :find_by, :validate
+      attr_accessor :saved_objects, :validators
       def count
-        array_object.length
+        saved_objects.length
       end
 
       def collect
-        array_object
+        saved_objects
       end
 
       def validate_presence_of(*args)
-        @validate = args
         args.each do |name|
-          define_method("is_exist_#{name}") do
-            return true if eval(name.to_s)
-            false
+          @validators << "check_presence_of_#{ name }"
+          define_method("check_presence_of_#{ name }") do
+            @errors["#{ name }"] << ["#{ name } must exist"] unless public_send(name)
+          end
+        end
+      end
+
+      def validate_numericality_of(*args)
+        args.each do |name|
+          @validators << "numericalilty_of_#{ name }"
+          define_method("numericalilty_of_#{ name }") do
+            if public_send(name)
+              @errors["#{ name }"] << ['must be an integer'] unless public_send(name).is_a?(Integer)
+            end
           end
         end
       end
     end
-    klass.find_by.each do |name|
-      klass.instance_eval %{
-        def find_by_#{name}(value)
-          array_object.find { |x| x.#{name}.eql? value }
+
+    klass.singleton_class.class_eval do
+      klass::DYNAMIC_FIND_BY.each do |param|
+        define_method("find_by_#{ param }") do |value|
+          saved_objects.find_all { |object| object.public_send(param).eql? value }
         end
-        }
+      end
     end
   end
 
   def save
+    @errors.clear
     validate
-    self.class.array_object << self if @errors.empty?
-    return "created object #{self}" if @errors.empty?
-    @errors
+    check_errors_and_save
   end
 
+  def check_errors_and_save
+    if @errors.empty?
+      self.class.saved_objects << self
+      "created object #{ self.inspect }"
+    else
+      @errors
+    end
+  end
 end
 
 class Play
-  @find_by = [:fname, :lname, :age, :email]
-  @array_object = []
+  DYNAMIC_FIND_BY = [:fname, :lname, :age, :email]
+  @saved_objects = []
+  @validators = []
   include MyObjectStore
   attr_accessor :fname ,:lname ,:age ,:email
-  validate_presence_of :fname ,:age
+  validate_presence_of :fname, :age
+  validate_numericality_of :age
 
   def initialize
-    @errors = Hash.new(Array.new)
+    @errors = Hash.new { |hash, key| hash[key] = [] }
   end
 
   def validate
-    @errors[:age] += ['Age should be a integer'] unless age.is_a?(Integer)
-    self.class.validate.each do |param|
-      @errors[param] += ["#{param} must exist"] unless eval("is_exist_#{param}")
+    self.class.validators.each do |method_name|
+      public_send(method_name)
     end
   end
 end
 
 p2 = Play.new
-p2.fname = "abc"
-p2.lname = "def"
-p2.email = "heloo@gmail.com"
+p2.fname = 'abc'
+p2.lname = 'def'
+p2.email = 'heloo@gmail.com'
 p2.age = 1
+puts p2.save
 
 p3 = Play.new
-p3.fname = "bsd"
-p3.age = 12
-
-p4 = Play.new
-p4.fname ="bc"
-
-p5 = Play.new
-p5.age ="bc"
-
-puts p2.save
+p3.fname = 'himanshu'
+p3.lname = 'mishra'
+p3.email = 'heloooo@gmail.com'
+p3.age = 1
 puts p3.save
-puts p4.save
-puts p5.save
 
 p Play.collect
 p Play.count
 
-p Play.find_by_fname('abc')
-p Play.find_by_lname('def')
+Play.find_by_fname('xyz')

@@ -1,17 +1,8 @@
 require "observer"
 
-module Observable
-  def changed?
-    if defined? @observer_state and @observer_state
-      false
-    else
-      true
-    end
-  end
-end
-
-
 module DirtyObject
+  @@dirty_object = []
+  @@hash = Hash.new([])
   include Observable
   def initialize
     add_observer(self,func=:update)
@@ -20,7 +11,7 @@ module DirtyObject
   def self.included(klass)
     class << klass
       def define_dirty_attributes(*args)
-        puts args.inspect
+        @@dirty_object << args
       end
     end
   end
@@ -29,12 +20,19 @@ module DirtyObject
     changed
   end
 
+  def changed?
+  end
+
   def changes
     notify_observers
   end
 
   def update
 
+  end
+
+  def display_dirty_object
+    @@dirty_object
   end
 end
 
@@ -48,9 +46,7 @@ u = User.new
 u.name  = 'Akhil'
 u.email = 'akhil@vinsol.com'
 u.age   = 30
-puts u.changed?
-puts u.save
-puts u.changed?
+puts u.display_dirty_object
+# puts u.changed?
 # puts u.save
 # puts u.changed?
-# puts u.changes
