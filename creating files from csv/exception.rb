@@ -1,2 +1,3 @@
-class FileNameError < StandardError ; end
-class FileExtension < StandardError ; end
+class FileNameError < StandardError   ; end
+
+class FileExtensionError < StandardError ; end
