@@ -12,19 +12,19 @@ module MyObjectStore
 
       def validate_presence_of(*args)
         args.each do |name|
-          @validators << "check_presence_of_#{ name }"
+          validators << "check_presence_of_#{ name }"
           define_method("check_presence_of_#{ name }") do
-            @errors[name] << ["#{ name } must exist"] unless public_send(name)
+            errors[name] << ["#{ name } must exist"] unless public_send(name)
           end
         end
       end
 
       def validate_numericality_of(*args)
         args.each do |name|
-          @validators << "check_numericalilty_of_#{ name }"
+          validators << "check_numericalilty_of_#{ name }"
           define_method("check_numericalilty_of_#{ name }") do
             if public_send(name)
-              @errors[name] << ['must be an integer'] unless public_send(name).is_a?(Integer)
+              errors[name] << ['must be an integer'] unless public_send(name).is_a?(Integer)
             end
           end
         end
@@ -41,17 +41,17 @@ module MyObjectStore
   end
 
   def save
-    @errors.clear
+    errors.clear
     validate
     check_errors_and_save
   end
 
   def check_errors_and_save
-    if @errors.empty?
+    if errors.empty?
       self.class.saved_objects << self
       "created object #{ self.inspect }"
     else
-      @errors
+      errors
     end
   end
 end
@@ -80,8 +80,6 @@ p2 = Play.new
 p2.fname = 'abc'
 p2.lname = 'def'
 p2.email = 'heloo@gmail.com'
-# p2.age = 1
-# @p2.err ors["b"]
 puts p2.save
 
 p3 = Play.new
