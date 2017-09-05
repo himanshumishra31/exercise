@@ -12,9 +12,10 @@ module MyObjectStore
 
       def validate_presence_of(*args)
         args.each do |name|
-          validators << "check_presence_of_#{ name }"
-          define_method("check_presence_of_#{ name }") do
-            errors[name] << ["#{ name } must exist"] unless public_send(name)
+          method_name = "check_presence_of_#{ name }"
+          validators << method_name
+          define_method(method_name) do
+            errors[name] << "#{ name } must exist" unless public_send(name)
           end
         end
       end
@@ -24,7 +25,7 @@ module MyObjectStore
           validators << "check_numericalilty_of_#{ name }"
           define_method("check_numericalilty_of_#{ name }") do
             if public_send(name)
-              errors[name] << ['must be an integer'] unless public_send(name).is_a?(Integer)
+              errors[name] << 'must be an integer' unless public_send(name).is_a?(Integer)
             end
           end
         end
@@ -41,7 +42,6 @@ module MyObjectStore
   end
 
   def save
-    errors.clear
     validate
     check_errors_and_save
   end
@@ -61,7 +61,7 @@ class Play
   @saved_objects = []
   @validators = []
   include MyObjectStore
-  attr_accessor :fname ,:lname ,:age ,:email, :errors
+  attr_accessor :fname, :lname, :age, :email, :errors
   validate_presence_of :fname, :age
   validate_numericality_of :age
 
@@ -70,6 +70,7 @@ class Play
   end
 
   def validate
+    errors.clear
     self.class.validators.each do |method_name|
       public_send(method_name)
     end
