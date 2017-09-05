@@ -34,7 +34,7 @@ module MyObjectStore
     end
 
     klass.singleton_class.class_eval do
-      klass::DYNAMIC_FIND_BY.each do |param|
+      klass::DYNAMIC_FINDERS.each do |param|
         define_method("find_by_#{ param }") do |value|
           saved_objects.find_all { |object| object.public_send(param).eql? value }
         end
@@ -47,6 +47,7 @@ module MyObjectStore
     check_errors_and_save
   end
 
+  private
   def check_errors_and_save
     if errors.empty?
       self.class.saved_objects << self
@@ -58,7 +59,7 @@ module MyObjectStore
 end
 
 class Play
-  DYNAMIC_FIND_BY = [:fname, :lname, :age, :email]
+  DYNAMIC_FINDERS = [:fname, :lname, :age, :email]
   @saved_objects = []
   @validators = []
   include MyObjectStore
