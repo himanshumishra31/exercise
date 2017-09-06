@@ -1,14 +1,18 @@
 module DirtyObject
-  @@dirty_hash = Hash.new(Array.new(1))
-  @@changed = false
+  def initialize
+    @dirty_hash = Hash.new(Array.new(1))
+    @changed = false
+  end
+
   def self.included(klass)
     class << klass
       def define_dirty_attributes(*args)
         args.each do |param|
           define_method("#{param}=") do |val|
-            @@changed = true
             @param = val
+            @changed = true
             change_hash(val,param)
+
           end
 
           define_method(param) do
@@ -16,8 +20,8 @@ module DirtyObject
           end
 
           define_method("#{param}_was") do
-            return 'nil' unless @@dirty_hash[param][0]
-            @@dirty_hash[param][0]
+            return 'nil' unless @dirty_hash[param][0]
+            @dirty_hash[param][0]
           end
         end
       end
@@ -26,26 +30,26 @@ module DirtyObject
 
 
   def change_hash(val,param)
-    if @@dirty_hash[param][0] == val || @@dirty_hash[param][1] == val
-      @@dirty_hash.delete(param)
-      @@changed = false if @@dirty_hash.empty?
+    if @dirty_hash[param][0] == val || @dirty_hash[param][1] == val
+      @dirty_hash.delete(param)
+      @changed = false if @dirty_hash.empty?
     else
-      @@dirty_hash[param] += [val]
-      @@dirty_hash[param].shift if @@dirty_hash[param].length > 2
+      @dirty_hash[param] += [val]
+      @dirty_hash[param].shift if @dirty_hash[param].length > 2
     end
   end
 
   def changes
     return {} unless changed?
-    @@dirty_hash
+    @dirty_hash
  end
 
   def changed?
-    @@changed
+    @changed
   end
 
   def save
-    @@changed = false
+    @changed = false
     true
   end
 
