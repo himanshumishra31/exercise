@@ -4,7 +4,7 @@ class Interactive
   def initialize
     @result = []
   end
-  
+
   def set_binding
     binding
   end
@@ -23,8 +23,6 @@ end
 
 object = Interactive.new
 bind = object.set_binding
-
-
 more_input = true
 while more_input
   begin
@@ -38,4 +36,3 @@ while more_input
     more_input = true
   end
 end
-

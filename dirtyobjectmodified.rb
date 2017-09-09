@@ -1,6 +1,7 @@
 module DirtyObject
+  attr_accessor :dirty_hash
   def initialize
-    @dirty_hash = Hash.new(Array.new(1))
+    @dirty_hash = Hash.new { |hash, key| hash[key] = [nil,nil] }
     @changed = false
   end
 
@@ -10,15 +11,15 @@ module DirtyObject
         args.each do |param|
           define_method("#{param}=") do |val|
             @param = val
-            @changed = true
             change_hash(val,param)
           end
 
-          define_method(param) do
+          define_method("#{param}") do
             @param
           end
 
           define_method("#{param}_was") do
+            return 'nil' unless @dirty_hash[param][1]
             return 'nil' unless @dirty_hash[param][0]
             @dirty_hash[param][0]
           end
@@ -27,32 +28,35 @@ module DirtyObject
     end
   end
 
-  def change_hash(val, param)
+  def change_hash(val,param)
     if @dirty_hash[param][0] == val
-      @dirty_hash.delete(param)
-      @changed = false if @dirty_hash.empty?
+      @dirty_hash[param].pop
     else
-      @dirty_hash[param] += [val]
-      @dirty_hash[param].shift if @dirty_hash[param].length > 2
+      @dirty_hash[param][1] = val
+      @changed = true
     end
   end
 
   def changes
     return {} unless changed?
-    @dirty_hash
- end
+    store_changes = Hash.new([])
+    @dirty_hash.each {|key,value| store_changes[key] = value if @dirty_hash[key].length > 1}
+    @changed = false if store_changes.empty?
+    store_changes
+  end
 
   def changed?
     @changed
   end
 
   def save
+    @dirty_hash.each { |key,value| @dirty_hash[key].shift }
     @changed = false
-    @dirty_hash.each { |key,values| values.shift }
     true
   end
 
 end
+
 class User
   include DirtyObject
   attr_accessor :name, :age, :email

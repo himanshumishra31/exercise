@@ -68,7 +68,7 @@ class Play
   validate_numericality_of :age
 
   def initialize
-    @errors = Hash.new { |hash, key| hash[key] = [] }
+    self.errors = Hash.new { |hash, key| hash[key] = [] }
   end
 
   def validate
