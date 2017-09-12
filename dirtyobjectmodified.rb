@@ -19,9 +19,7 @@ module DirtyObject
           end
 
           define_method("#{param}_was") do
-            return 'nil' unless @dirty_hash[param][1]
-            return 'nil' unless @dirty_hash[param][0]
-            @dirty_hash[param][0]
+            @dirty_hash[param][0] if @dirty_hash[param].length > 1
           end
         end
       end
@@ -38,11 +36,7 @@ module DirtyObject
   end
 
   def changes
-    return {} unless changed?
-    store_changes = Hash.new([])
-    @dirty_hash.each {|key,value| store_changes[key] = value if @dirty_hash[key].length > 1}
-    @changed = false if store_changes.empty?
-    store_changes
+    @dirty_hash.select {|key,value| @dirty_hash[key].length > 1 }
   end
 
   def changed?
@@ -69,9 +63,9 @@ u.email = 'akhil@vinsol.com'
 u.age   = 30
 puts u.changed?
 puts u.changes
-puts u.name_was
+puts u.name_was ? u.name_was : 'nil'
 puts u.email_was rescue puts 'undefined method'
-puts u.age_was
+puts u.age_was ? u.age_was : 'nil'
 puts u.save
 
 puts u.changed?
