@@ -2,7 +2,6 @@ module DirtyObject
   attr_accessor :dirty_hash,:name_was, :age_was
   def initialize
     @dirty_hash = Hash.new { |hash, key| hash[key] = [] }
-    @changed = false
   end
 
   def self.included(klass)
@@ -12,7 +11,6 @@ module DirtyObject
           instance_eval("@#{param}_was = nil")
           define_method("#{param}=") do |val|
             instance_eval("@#{param} = val")
-            @changed = true
             change_hash(val,param)
           end
 
@@ -35,7 +33,6 @@ module DirtyObject
     else
       @dirty_hash[param].push(check,val)
     end
-    @changed = false if @dirty_hash.empty?
   end
 
   def changes
@@ -43,13 +40,13 @@ module DirtyObject
   end
 
   def changed?
-    @changed
+    return false if @dirty_hash.empty?
+    true
   end
 
   def save
     @dirty_hash.each { |key ,_values| instance_eval("#{key}_change") }
     @dirty_hash.clear
-    @changed = false
     true
   end
 
