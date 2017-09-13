@@ -40,8 +40,7 @@ module DirtyObject
   end
 
   def changed?
-    return false if @dirty_hash.empty?
-    true
+    @dirty_hash.any?
   end
 
   def save
