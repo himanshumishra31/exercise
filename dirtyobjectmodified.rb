@@ -8,18 +8,14 @@ module DirtyObject
     class << klass
       def define_dirty_attributes(*args)
         args.each do |param|
-          instance_eval("@#{param}_was = nil")
+          instance_variable_set("@#{param}_was", nil)
           define_method("#{param}=") do |val|
-            instance_eval("@#{param} = val")
+            instance_variable_set("@#{param}", val)
             change_hash(val,param)
           end
 
           define_method("#{param}") do
-            instance_eval("@#{param}")
-          end
-
-          define_method("#{param}_change") do
-            instance_eval("@#{param}_was = @#{param}")
+            instance_variable_get("@#{param}")
           end
         end
       end
@@ -44,7 +40,7 @@ module DirtyObject
   end
 
   def save
-    @dirty_hash.each { |key ,_values| instance_eval("#{key}_change") }
+    @dirty_hash.each { |key ,_values|  instance_variable_set("@#{key}_was",public_send(key)) }
     @dirty_hash.clear
     true
   end
