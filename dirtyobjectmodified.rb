@@ -1,5 +1,7 @@
 module DirtyObject
-  attr_accessor :dirty_hash,:name_was, :age_was
+
+  attr_accessor :dirty_hash, :name_was, :age_was
+
   def initialize
     @dirty_hash = Hash.new { |hash, key| hash[key] = [] }
   end
@@ -8,26 +10,26 @@ module DirtyObject
     class << klass
       def define_dirty_attributes(*args)
         args.each do |param|
-          instance_variable_set("@#{param}_was", nil)
-          define_method("#{param}=") do |val|
-            instance_variable_set("@#{param}", val)
-            change_hash(val,param)
+          instance_variable_set("@#{ param }_was", nil)
+          define_method("#{ param }=") do |val|
+            instance_variable_set("@#{ param }", val)
+            change_hash(val, param)
           end
 
-          define_method("#{param}") do
-            instance_variable_get("@#{param}")
+          define_method("#{ param }") do
+            instance_variable_get("@#{ param }")
           end
         end
       end
     end
   end
 
-  def change_hash(val,param)
-    check = instance_eval("#{param}_was")
+  def change_hash(val, param)
+    check = instance_eval("#{ param }_was")
     if val.eql? check
       @dirty_hash.delete(param)
     else
-      @dirty_hash[param].push(check,val)
+      @dirty_hash[param].push(check, val)
     end
   end
 
@@ -40,7 +42,7 @@ module DirtyObject
   end
 
   def save
-    @dirty_hash.each { |key ,_values|  instance_variable_set("@#{key}_was",public_send(key)) }
+    @dirty_hash.each { |key, _values|  instance_variable_set("@#{ key }_was", public_send(key)) }
     @dirty_hash.clear
     true
   end
@@ -56,7 +58,7 @@ end
 u = User.new
 u.name  = 'Akhil'
 u.email = 'akhil@vinsol.com'
-u.age   = 30
+u.age = 30
 puts u.changed?
 puts u.changes
 puts u.name_was ? u.name_was : 'nil'
